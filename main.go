@@ -6,6 +6,7 @@ import(
 	"io/ioutil"
 	"regexp"
 	"strings"
+	//"strconv"
 )
 
 var searchingKeyword string = "สถานที่ท่องเที่ยวในไทย"
@@ -26,10 +27,18 @@ func main(){
 
 	list := getListOfUrl(body)
 
-	for i:=0;i<len(list);i++{
+	for i:=0;i<1;i++{
 		pageResponse := getResponseFromUrl(list[i][1])
-		groupOfWord := cutOffHtmlTag(pageResponse)
-		fmt.Println(strings.Split(groupOfWord, " "))
+		cutOffJavaScriptString := cutOffJavaScript(pageResponse)
+		cutOffHtmlTagString := cutOffHtmlTag(cutOffJavaScriptString)
+		completeString := strings.Replace(cutOffHtmlTagString, " ", "", -1)
+		completeString = strings.Replace(completeString, "\t", "", -1)
+		completeString = strings.Replace(completeString, "\r\n", "\n", -1)
+		arrayString := strings.Split(completeString, "\n")
+		arrayString = delete_empty(arrayString)
+		for j:=0;j<len(arrayString);j++{
+			fmt.Printf("%d, %s %d\n", j, arrayString[j], []byte(arrayString[j]))
+		}
 	}
 }
 
@@ -56,7 +65,25 @@ func getResponseFromUrl(url string) string{
 
 
 func cutOffHtmlTag(body string) string{
-	re := regexp.MustCompile("<(.*?)>")
-	cutOff := re.ReplaceAllLiteralString(body, " ")
-	return cutOff
+	re := regexp.MustCompile("<[^>]*>")
+	cutOff := re.ReplaceAllLiteralString(body, `</\/>`)
+	resultCutOff := strings.Replace(cutOff, `</\/>`, "", -1)
+	return resultCutOff
+}
+
+func cutOffJavaScript(body string) string{
+	re := regexp.MustCompile(`<script\b[^>]*>([\s\S]*?)<\/script>`)
+	cutOff := re.ReplaceAllLiteralString(body, `</\/>`)
+	resultCutOff := strings.Replace(cutOff, `</\/>`, "", -1)
+	return resultCutOff
+}
+
+func delete_empty (s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
 }
