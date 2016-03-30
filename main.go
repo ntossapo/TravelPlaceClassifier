@@ -6,39 +6,42 @@ import(
 	"io/ioutil"
 	"regexp"
 	"strings"
-	//"strconv"
+	"time"
 )
 
 var searchingKeyword string = "สถานที่ท่องเที่ยวในไทย"
 
 func main(){
-	url := fmt.Sprintf("https://www.google.co.th/search?q=%s&oq=%s", searchingKeyword)
-	resp, err := http.Get(url)
+	for start := 0 ;start < 1000 ; start+=10 {
+		url := fmt.Sprintf("https://www.google.co.th/search?q=%s&oq=%s&start=%d", searchingKeyword, searchingKeyword, start)
+		resp, err := http.Get(url)
 
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	list := getListOfUrl(body)
-
-	for i:=0;i<1;i++{
-		pageResponse := getResponseFromUrl(list[i][1])
-		cutOffJavaScriptString := cutOffJavaScript(pageResponse)
-		cutOffHtmlTagString := cutOffHtmlTag(cutOffJavaScriptString)
-		completeString := strings.Replace(cutOffHtmlTagString, " ", "", -1)
-		completeString = strings.Replace(completeString, "\t", "", -1)
-		completeString = strings.Replace(completeString, "\r\n", "\n", -1)
-		arrayString := strings.Split(completeString, "\n")
-		arrayString = delete_empty(arrayString)
-		for j:=0;j<len(arrayString);j++{
-			fmt.Printf("%d, %s %d\n", j, arrayString[j], []byte(arrayString[j]))
+		if err != nil {
+			panic(err)
 		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		list := getListOfUrl(body)
+
+		for i := 0; i < len(list); i++ {
+			pageResponse := getResponseFromUrl(list[i][1])
+			cutOffJavaScriptString := cutOffJavaScript(pageResponse)
+			cutOffHtmlTagString := cutOffHtmlTag(cutOffJavaScriptString)
+			completeString := strings.Replace(cutOffHtmlTagString, " ", "", -1)
+			completeString = strings.Replace(completeString, "\t", "", -1)
+			completeString = strings.Replace(completeString, "\r\n", "\n", -1)
+			arrayString := strings.Split(completeString, "\n")
+			arrayString = delete_empty(arrayString)
+			for j := 0; j < len(arrayString); j++ {
+				fmt.Printf("%d, %s\n", j, arrayString[j])
+			}
+		}
+		time.Sleep(30*time.Second)
 	}
 }
 
